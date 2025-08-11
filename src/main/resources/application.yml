@@ -1,0 +1,21 @@
+spring:
+  application:
+  name: auth-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/authdb
+    username: root
+    password: ganesh239
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql : true
+server:
+    port : 8081
+spring doc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+
+

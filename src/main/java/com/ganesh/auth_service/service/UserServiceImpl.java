@@ -1,57 +1,61 @@
 package com.ganesh.auth_service.service;
 
+import com.ganesh.auth_service.Configuration.Mapper;
+import com.ganesh.auth_service.GlobalExceptionHandler.ResourceNotFound;
 import com.ganesh.auth_service.model.User;
+import com.ganesh.auth_service.model.UserRequestDto;
+import com.ganesh.auth_service.model.UserResponseDto;
 import com.ganesh.auth_service.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
     UserRepository userRepo;
-    public List<User> getAllUsers(){
-        return userRepo.findAll();
+    @Autowired
+    Mapper mp;
+    public List<UserResponseDto> getAllUsers(){
+        return userRepo.findAll().stream().map(user->mp.getMapper().map(user, UserResponseDto.class)).toList();
     }
 
     @Override
-public User getUserById(Long id) {
+public UserResponseDto getUserById(Long id) {
         //User user=users.stream().filter(user1-> user1.getId().equals(id)).findFirst().orElseThrow(()-> new RuntimeException("User Not found"));
-        return userRepo.findById(id).orElseThrow(()->new RuntimeException("User not found"));
+        User user=userRepo.findById(id).orElseThrow(()->new ResourceNotFound("User not found with",id));
+        return mp.getMapper().map(user, UserResponseDto.class);
 
     }
-
+    @Transactional
     @Override
-    public User createUser(User user) {
-        return userRepo.save(user);
+    public UserResponseDto createUser(UserRequestDto user1) {
+        User user=mp.getMapper().map(user1, User.class);
+        User userres= userRepo.save(user);
+        UserResponseDto userdto=mp.getMapper().map(userres, UserResponseDto.class);
+        return userdto;
 
     }
-
+    @Transactional
     @Override
-    public User updateUser(Long id, User user) {
-        User user1=userRepo.findById(id).orElseThrow(()->new RuntimeException("User is not available"));
-        if (user.getUsername() != null) {
-            user1.setUsername(user.getUsername());
-        }
-        if (user.getEmail() != null) {
-            user1.setEmail(user.getEmail());
-        }
-        if(user.getPassword() != null) {
-            user1.setPassword(user.getPassword());
-        }
-        if(user.getRole()!= null){
-            user1.setRole(user.getRole());
-        }
-        userRepo.save(user1);
-        return user1;
+    public UserResponseDto updateUser(Long id, UserRequestDto userdto) {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFound("User not found with id: " , id));
+
+        if (userdto.getUsername() != null) user.setUsername(userdto.getUsername());
+        if (userdto.getEmail() != null) user.setEmail(userdto.getEmail());
+        if (userdto.getPassword() != null) user.setPassword(userdto.getPassword());
+        if (userdto.getRole() != null) user.setRole(userdto.getRole());
+
+        return mp.getMapper().map(userRepo.save(user), UserResponseDto.class);
 
     }
-
+    @Transactional
     @Override
     public void deleteUser(Long id) {
-        userRepo.findById(id).orElseThrow(()->new RuntimeException("User not found"));
+        userRepo.findById(id).orElseThrow(()->new ResourceNotFound("User not found",id));
         userRepo.deleteById(id);
     }
 }

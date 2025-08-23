@@ -1,6 +1,9 @@
 package com.ganesh.auth_service.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -8,16 +11,24 @@ import java.time.LocalDateTime;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @ToString
 @Entity(name="users")
 public class User {
+    public enum Role {
+        ADMIN,
+        USER
+    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(nullable = false,unique = true)
+    @NotBlank
     private String username;
+    @Email
     @Column(nullable = false,unique = true)
     private String email;
     @Column(nullable = false)
+    @Size(min=6)
     private String password;
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
